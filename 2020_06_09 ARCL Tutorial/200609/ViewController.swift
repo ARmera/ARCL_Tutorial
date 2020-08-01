@@ -21,14 +21,28 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         sceneLocationView.run()
         view.addSubview(sceneLocationView)
+        
+        /*
+        # Pin 찍기
+        */
+        
         let coordinate = CLLocationCoordinate2D(latitude: 37.539316, longitude: 127.077394)
         let location = CLLocation(coordinate: coordinate, altitude: 100)
         let image = UIImage(named: "pin.png")!
         let annotationNode = LocationAnnotationNode(location: location, image: image)
+        
+        
+        /*
+        # PolyLine 그리기, Obj 배치
+        */
+        
         var idx = 0;
         for item in info{
+            //글씨 써주는 AR
             let boxNode = SCNNode(geometry:SCNText(string: String(idx), extrusionDepth: 0.5))
             boxNode.scale = SCNVector3(0.3,0.3,0.3)
+            
+            //obj파일 띄워주는 AR
             let tempScene = SCNScene(named:"model.obj")!
             let material = SCNMaterial()
             var shape = tempScene.rootNode
@@ -37,12 +51,17 @@ class ViewController: UIViewController {
             material.diffuse.contents = "materials.mtl"
             material.specular.contents = UIColor.white
             shape.geometry?.firstMaterial = material
+            
+            // 그것들의 위치를 찍어줌.
             let locationnode = LocationNode(location: CLLocation(latitude:item[1],longitude:item[0]))
             let locationnode2 = LocationNode(location :CLLocation(coordinate: CLLocationCoordinate2D(latitude: item[1], longitude: item[0]), altitude: 10))
             locationnode.addChildNode(shape)
             locationnode2.addChildNode(boxNode)
+            
+            
             sceneLocationView.addLocationNodeWithConfirmedLocation(locationNode: locationnode)
             sceneLocationView.addLocationNodeWithConfirmedLocation(locationNode: locationnode2)
+            
             idx += 1
         }
         locationNode.addChildNode(annotationNode)
@@ -53,6 +72,7 @@ class ViewController: UIViewController {
       super.viewDidLayoutSubviews()
       sceneLocationView.frame = view.bounds
     }
+    //길 그려주는 거
     func addSceneModels() {
         // 1. Don't try to add the models to the scene until we have a current location
         guard sceneLocationView.sceneLocationManager.currentLocation != nil else {
@@ -71,8 +91,8 @@ class ViewController: UIViewController {
             idx += 1;
         }
         let testline = MKPolyline(coordinates: testcoords, count: testcoords.count)
-        sceneLocationView.addPolylines(polylines: [testline]){ distance->
-            SCNBox in let box = SCNBox(width: 1, height: 0.5, length: distance, chamferRadius: 0.7)
+        sceneLocationView.addPolylines(polylines: [testline]){ distance->SCNBox in
+            let box = SCNBox(width: 1, height: 0.5, length: distance, chamferRadius: 0.7)
                 box.firstMaterial?.diffuse.contents = UIColor.red.withAlphaComponent(1)
                 return box
         }
